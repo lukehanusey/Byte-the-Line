@@ -17,7 +17,7 @@ const ai = new GoogleGenAI({
   apiKey: getApiKey()
 });
 
-const MODEL_NAME = "gemini-1.5-flash";
+const MODEL_NAME = "gemini-3-flash-preview";
 
 export async function getSummary(input: MatchupInput): Promise<SummaryData> {
   const currentDate = new Date().toISOString().split('T')[0];
