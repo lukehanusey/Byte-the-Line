@@ -20,7 +20,6 @@ export default function App() {
   const [history, setHistory] = useState<AnalysisRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const toggleTheme = () => {
@@ -32,14 +31,12 @@ export default function App() {
   const handleInputSubmit = async (data: MatchupInput) => {
     setInput(data);
     setIsLoading(true);
-    setError(null);
     try {
       const result = await getSummary(data);
       setSummary(result);
       setStep('summarize');
-    } catch (err) {
-      console.error('Failed to get summary:', err);
-      setError(err instanceof Error ? err.message : 'An analytical failure occurred. Check API configuration.');
+    } catch (error) {
+      console.error('Failed to get summary:', error);
     } finally {
       setIsLoading(false);
     }
@@ -48,14 +45,12 @@ export default function App() {
   const goToAnalysis = async () => {
     if (!input || !summary) return;
     setIsLoading(true);
-    setError(null);
     try {
       const result = await getAnalysis(input, summary);
       setAnalysis(result);
       setStep('analyze');
-    } catch (err) {
-      console.error('Failed to get analysis:', err);
-      setError(err instanceof Error ? err.message : 'Analysis processing error.');
+    } catch (error) {
+      console.error('Failed to get analysis:', error);
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +59,6 @@ export default function App() {
   const goToRecommendation = async () => {
     if (!input || !summary || !analysis) return;
     setIsLoading(true);
-    setError(null);
     try {
       const result = await getRecommendation(input, summary, analysis);
       setRecommendation(result);
@@ -81,16 +75,14 @@ export default function App() {
       setHistory(prev => [newRecord, ...prev].slice(0, 10));
       
       setStep('recommend');
-    } catch (err) {
-      console.error('Failed to get recommendation:', err);
-      setError(err instanceof Error ? err.message : 'Final model verdict failed.');
+    } catch (error) {
+      console.error('Failed to get recommendation:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const loadFromHistory = (record: AnalysisRecord) => {
-    setError(null);
     setInput(record.input);
     setSummary(record.summary);
     setAnalysis(record.analysis);
@@ -99,7 +91,6 @@ export default function App() {
   };
 
   const reset = () => {
-    setError(null);
     setStep('input');
     setInput(null);
     setSummary(null);
@@ -254,29 +245,6 @@ export default function App() {
 
         <div ref={contentRef} className="flex-1 p-8">
           <AnimatePresence mode="wait">
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-6 max-w-2xl mx-auto"
-              >
-                <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 flex items-center gap-3 text-rose-500">
-                  <Activity className="w-5 h-5 flex-shrink-0" />
-                  <div className="text-sm font-medium">
-                    <p className="font-bold uppercase tracking-widest text-[10px] mb-1">Model Error Detected</p>
-                    {error}
-                  </div>
-                  <button 
-                    onClick={() => setError(null)}
-                    className="ml-auto p-1 hover:bg-rose-500/20 rounded-lg transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4 rotate-90" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
             {step === 'input' && (
               <motion.div
                 key="input"
