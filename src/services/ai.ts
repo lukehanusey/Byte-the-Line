@@ -2,22 +2,20 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { MatchupInput, SummaryData, AnalysisData, RecommendationData } from "../types";
 
 const getApiKey = () => {
-  const viteKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (viteKey) return viteKey;
-  const standardKey = import.meta.env.GEMINI_API_KEY;
-  if (standardKey) return standardKey;
-  try {
-    return process.env.GEMINI_API_KEY || '';
-  } catch {
-    return '';
-  }
+  // Try all possible ways Vite/Vercel might expose the key
+  return (
+    import.meta.env.VITE_GEMINI_API_KEY || 
+    import.meta.env.GEMINI_API_KEY || 
+    (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '') ||
+    ''
+  );
 };
 
 const ai = new GoogleGenAI({ 
   apiKey: getApiKey()
 });
 
-const MODEL_NAME = "gemini-3-flash-preview";
+const MODEL_NAME = "gemini-1.5-flash";
 
 export async function getSummary(input: MatchupInput): Promise<SummaryData> {
   const currentDate = new Date().toISOString().split('T')[0];
