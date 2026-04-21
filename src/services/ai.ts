@@ -1,11 +1,28 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MatchupInput, SummaryData, AnalysisData, RecommendationData } from "../types";
 
+const getApiKey = () => {
+  // Try Vite's specific environment variable first (VITE_ prefix for client-side)
+  const viteKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (viteKey) return viteKey;
+
+  // Fallback to standard GEMINI_API_KEY (might work in some environments)
+  const standardKey = import.meta.env.GEMINI_API_KEY;
+  if (standardKey) return standardKey;
+
+  // Last resort: process.env (primarily for Node/Build environments)
+  try {
+    return process.env.GEMINI_API_KEY || '';
+  } catch {
+    return '';
+  }
+};
+
 const ai = new GoogleGenAI({ 
-  apiKey: process.env.GEMINI_API_KEY || '' 
+  apiKey: getApiKey()
 });
 
-const MODEL_NAME = "gemini-3-flash-preview";
+const MODEL_NAME = "gemini-1.5-flash"; // More widely available stable model
 
 export async function getSummary(input: MatchupInput): Promise<SummaryData> {
   const currentDate = new Date().toISOString().split('T')[0];
@@ -26,7 +43,7 @@ export async function getSummary(input: MatchupInput): Promise<SummaryData> {
   Analyze the upcoming ${input.sport} matchup between ${input.teamA} and ${input.teamB}. 
   Venue Context: ${venueInfo}
   
-  Search requirements:
+  Instructions:
   - ${sportSpecificInstructions}
   - Last 5 games for both teams/players
   - Key injuries and roster changes
@@ -39,8 +56,6 @@ export async function getSummary(input: MatchupInput): Promise<SummaryData> {
     model: MODEL_NAME,
     contents: prompt,
     config: {
-      tools: [{ googleSearch: {} }],
-      toolConfig: { includeServerSideToolInvocations: true },
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -97,8 +112,6 @@ export async function getAnalysis(input: MatchupInput, summary: SummaryData): Pr
     model: MODEL_NAME,
     contents: prompt,
     config: {
-      tools: [{ googleSearch: {} }],
-      toolConfig: { includeServerSideToolInvocations: true },
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -165,8 +178,6 @@ export async function getRecommendation(input: MatchupInput, summary: SummaryDat
     model: MODEL_NAME,
     contents: prompt,
     config: {
-      tools: [{ googleSearch: {} }],
-      toolConfig: { includeServerSideToolInvocations: true },
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
